@@ -49,4 +49,3 @@ if __name__ == "__main__":
     end = perf_counter()
 
     print(f"[parallel_numba] n={n}, time={end - start:.6f} s")
-
