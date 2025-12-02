@@ -1,0 +1,54 @@
+{
+  "results": [
+    {
+      "n": 128,
+      "basic_time": 0.2637670999392867,
+      "numpy_time": 0.00036450009793043137,
+      "parallel_time": 0.0007264995947480202,
+      "speedup_numpy": 723.6406833274141,
+      "speedup_parallel": 363.065722054218,
+      "efficiency_parallel": 22.691607628388624,
+      "num_cores": 16
+    },
+    {
+      "n": 256,
+      "basic_time": 2.911033700220287,
+      "numpy_time": 0.001337599940598011,
+      "parallel_time": 0.011030400171875954,
+      "speedup_numpy": 2176.3111763587763,
+      "speedup_parallel": 263.9100716982604,
+      "efficiency_parallel": 16.494379481141277,
+      "num_cores": 16
+    },
+    {
+      "n": 512,
+      "basic_time": null,
+      "numpy_time": 0.00561359990388155,
+      "parallel_time": 0.15577689977362752,
+      "speedup_numpy": null,
+      "speedup_parallel": null,
+      "efficiency_parallel": null,
+      "num_cores": 16
+    },
+    {
+      "n": 1024,
+      "basic_time": null,
+      "numpy_time": 0.018737899605184793,
+      "parallel_time": 2.6126660997979343,
+      "speedup_numpy": null,
+      "speedup_parallel": null,
+      "efficiency_parallel": null,
+      "num_cores": 16
+    },
+    {
+      "n": 2048,
+      "basic_time": null,
+      "numpy_time": 0.14323840010911226,
+      "parallel_time": 21.335464499890804,
+      "speedup_numpy": null,
+      "speedup_parallel": null,
+      "efficiency_parallel": null,
+      "num_cores": 16
+    }
+  ]
+}

@@ -1,51 +1,56 @@
-import numpy as np
+import json
+import os
 from time import perf_counter
-from numba import njit, prange
+from typing import Callable, Any
 
 
-@njit(parallel=True)
-def _matmul_parallel_kernel(A, B):
+def time_function(
+    fn: Callable[..., Any],
+    *args,
+    repeats: int = 3,
+    warmup: bool = False,
+) -> float:
     """
-    Numba-parallelized triple-loop matrix multiplication.
+    Time a function; return the best (minimum) time over 'repeats' runs.
 
-    A, B are NumPy arrays.
+    If warmup=True, calls fn once before timing (useful for Numba).
     """
-    n, m = A.shape
-    m2, p = B.shape
+    if warmup:
+        fn(*args)
 
-    # Safety check (Numba-compatible)
-    if m != m2:
-        raise ValueError("Inner dimensions must match")
-
-    C = np.zeros((n, p))
-
-    # Parallel over rows
-    for i in prange(n):
-        for j in range(p):
-            s = 0.0
-            for k in range(m):
-                s += A[i, k] * B[k, j]
-            C[i, j] = s
-    return C
+    best = float("inf")
+    for _ in range(repeats):
+        start = perf_counter()
+        fn(*args)
+        end = perf_counter()
+        elapsed = end - start
+        if elapsed < best:
+            best = elapsed
+    return best
 
 
-def matmul_parallel(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+def compute_speedup(t_base: float, t_other: float) -> float:
     """
-    Wrapper around the Numba-compiled kernel.
+    Compute speedup = t_base / t_other.
     """
-    return _matmul_parallel_kernel(A, B)
+    if t_other <= 0:
+        return float("inf")
+    return t_base / t_other
 
 
-if __name__ == "__main__":
-    n = 1024
-    A = np.random.rand(n, n)
-    B = np.random.rand(n, n)
+def compute_efficiency(speedup: float, num_threads: int) -> float:
+    """
+    Efficiency = speedup / num_threads.
+    """
+    if num_threads <= 0:
+        return 0.0
+    return speedup / num_threads
 
-    # Warm-up (trigger compilation – this run is slower)
-    _ = matmul_parallel(A, B)
 
-    start = perf_counter()
-    C = matmul_parallel(A, B)
-    end = perf_counter()
-
-    print(f"[parallel_numba] n={n}, time={end - start:.6f} s")
+def save_results(path: str, data: dict):
+    """
+    Save results dictionary to JSON file.
+    """
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)

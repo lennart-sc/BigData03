@@ -1,18 +1,22 @@
 import os
 import numpy as np
 
-from basic_python import generate_matrices_list, matmul_basic
-from vectorized_numpy import generate_matrices_np, matmul_numpy
-from parallel_numba import matmul_parallel
-from utils import time_function, compute_speedup, compute_efficiency, save_results
+from .basic_python import generate_matrices_list, matmul_basic
+from .vectorized_numpy import generate_matrices_np, matmul_numpy
+from .parallel_numba import matmul_parallel
+from .utils import (
+    time_function,
+    compute_speedup,
+    compute_efficiency,
+    save_results,
+)
 
 
 def run_experiments():
-    # Matrix sizes to test
-    sizes = [128, 256, 512]  # You can adjust these
+    # Matrix sizes to test (include up to 2028 as you asked)
+    sizes = [128, 256, 512, 1024, 2048]
 
-    # Pure Python triple-loop will be VERY slow for large n
-    # so we won't go crazy with basic for huge sizes.
+    # Pure Python triple-loop is VERY slow, so we limit it:
     max_basic_size = 256
 
     num_cores = os.cpu_count() or 1
@@ -20,6 +24,17 @@ def run_experiments():
 
     for n in sizes:
         print(f"\n========== n = {n} ==========")
+
+        # Decide how many repeats for timing (large n -> fewer repeats)
+        if n <= 256:
+            repeats_numpy = 3
+            repeats_parallel = 3
+        elif n <= 1024:
+            repeats_numpy = 2
+            repeats_parallel = 2
+        else:  # n >= 2048
+            repeats_numpy = 1
+            repeats_parallel = 1
 
         # ----- BASIC (Python lists) -----
         if n <= max_basic_size:
@@ -34,13 +49,19 @@ def run_experiments():
         # ----- NUMPY (vectorized) -----
         print("Running NumPy (vectorized) version...")
         A_np, B_np = generate_matrices_np(n, seed=42)
-        t_numpy = time_function(matmul_numpy, A_np, B_np, repeats=3)
+        t_numpy = time_function(matmul_numpy, A_np, B_np, repeats=repeats_numpy)
         print(f"  NumPy time      : {t_numpy:.6f} s")
 
         # ----- NUMBA (parallel) -----
         print("Running Numba (parallel) version...")
-        # Warmup happens inside time_function via warmup=True
-        t_parallel = time_function(matmul_parallel, A_np, B_np, repeats=3, warmup=True)
+        # warmup=True compiles kernel before timing
+        t_parallel = time_function(
+            matmul_parallel,
+            A_np,
+            B_np,
+            repeats=repeats_parallel,
+            warmup=True,
+        )
         print(f"  Numba parallel  : {t_parallel:.6f} s")
 
         # ----- Speedups & efficiency -----
@@ -69,12 +90,11 @@ def run_experiments():
         }
         all_results.append(result)
 
-    # Save results to a JSON file
+    # Save ALL results into a single JSON file at project root
     out_path = os.path.join(os.path.dirname(__file__), "..", "results.json")
     save_results(out_path, {"results": all_results})
-    print(f"\nAll results saved to {out_path}")
+    print(f"\nAll results saved to {os.path.abspath(out_path)}")
 
 
 if __name__ == "__main__":
     run_experiments()
-
